@@ -1,0 +1,418 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   style.css — Personal News Aggregator
+   Design goals: clean, iPhone-first, readable in bright daylight,
+                 comfortable in dark mode, generous tap targets.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens (CSS variables) ─────────────────────────────────────
+   Changing a value here updates the whole app. Swap colours freely.     */
+:root {
+  /* Surfaces */
+  --c-bg:         #f2f2f7;   /* page background      */
+  --c-card:       #ffffff;   /* article card          */
+  --c-filter-bar: #ffffff;   /* filter strip          */
+  --c-header:     #1B263B;   /* sticky header         */
+
+  /* Text */
+  --c-text:       #1c1c1e;   /* primary text          */
+  --c-text-dim:   #6e6e73;   /* timestamps, labels    */
+  --c-text-faint: #aeaeb2;   /* very muted            */
+
+  /* Accents */
+  --c-accent:     #0A84FF;   /* iOS blue              */
+  --c-accent-dim: rgba(10, 132, 255, 0.15);
+
+  /* Borders & dividers */
+  --c-border:     rgba(0, 0, 0, 0.09);
+
+  /* Category pill (inactive) */
+  --c-pill-bg:    #e5e5ea;
+  --c-pill-text:  #48484a;
+
+  /* Radius */
+  --r-card:       13px;
+  --r-pill:       20px;
+
+  /* Transitions */
+  --t-fast: 0.15s ease;
+  --t-med:  0.25s ease;
+
+  /* Safe-area fallbacks for notched iPhones */
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Dark mode — flipped automatically by the OS setting */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-bg:         #000000;
+    --c-card:       #1c1c1e;
+    --c-filter-bar: #1c1c1e;
+    --c-text:       #f5f5f7;
+    --c-text-dim:   #98989d;
+    --c-text-faint: #636366;
+    --c-border:     rgba(255, 255, 255, 0.10);
+    --c-pill-bg:    #2c2c2e;
+    --c-pill-text:  #ebebf5;
+  }
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  /* System font stack — uses the native font on every device */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;   /* stop Safari zooming text on rotation */
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+body {
+  min-height: 100dvh;   /* dvh = "dynamic viewport height", works in Safari */
+  background: var(--c-bg);
+}
+
+/* Remove default button styling */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;   /* no grey flash on tap */
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--c-header);
+  color: #fff;
+
+  /* Account for the iPhone notch / Dynamic Island */
+  padding-top: calc(12px + var(--safe-top));
+  padding-inline: 16px;
+  padding-bottom: 10px;
+
+  /* Subtle shadow so the header lifts over the content when scrolling */
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* Refresh button — looks like a plain icon, no box */
+.icon-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.80);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 8px;
+  transition: color var(--t-fast), transform var(--t-fast);
+}
+.icon-btn:active {
+  color: #fff;
+  transform: rotate(30deg);
+}
+
+/* Status line: "423 articles • updated 4m ago" */
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 9px;
+  min-height: 16px;
+}
+
+/* Blue badge showing unread count */
+.unread-badge {
+  background: var(--c-accent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.unread-badge:empty { display: none; }
+
+/* "Mark all read" and "Hide read" buttons */
+.header-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.control-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.90);
+  padding: 5px 13px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.control-btn:active {
+  background: rgba(255,255,255,0.22);
+}
+/* Highlight the "Hide read" button when it is active */
+.control-btn.active {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: #fff;
+}
+
+/* ── Filter bar ─────────────────────────────────────────────────────── */
+.filters-bar {
+  position: sticky;
+  /* Sits just below the header — header height varies, so we use a fallback */
+  top: 97px;   /* approximate; overridden by JS if needed */
+  z-index: 100;
+  background: var(--c-filter-bar);
+  border-bottom: 1px solid var(--c-border);
+  padding: 8px 0 7px;
+
+  /* Thin separator below the header */
+  box-shadow: 0 1px 0 var(--c-border);
+}
+
+/* Horizontally scrollable row of category pills */
+.category-filters {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 0 16px 7px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;   /* hide scrollbar in Firefox */
+}
+.category-filters::-webkit-scrollbar { display: none; }
+
+.filter-btn {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: var(--c-pill-bg);
+  border: none;
+  color: var(--c-pill-text);
+  padding: 5px 15px;
+  border-radius: var(--r-pill);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background var(--t-fast), color var(--t-fast);
+  min-height: 32px;   /* comfortable tap target */
+}
+.filter-btn.active {
+  background: var(--c-accent);
+  color: #fff;
+}
+.filter-btn:active:not(.active) {
+  background: var(--c-accent-dim);
+}
+
+/* Source dropdown row */
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.source-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--c-text-dim);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.source-select {
+  flex: 1;
+  background: var(--c-pill-bg);
+  border: none;
+  border-radius: 9px;
+  color: var(--c-text);
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  min-height: 32px;
+  /* Keep the native arrow — it's familiar and reliable on mobile */
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
+/* ── Article list ───────────────────────────────────────────────────── */
+.article-list {
+  padding: 12px 16px;
+  padding-bottom: calc(28px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Shown when there are no articles to display */
+.empty-state {
+  text-align: center;
+  color: var(--c-text-dim);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  padding: 60px 24px;
+}
+.empty-state strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+  color: var(--c-text);
+}
+
+/* ── Article card ───────────────────────────────────────────────────── */
+.article-card {
+  background: var(--c-card);
+  border-radius: var(--r-card);
+  padding: 13px 14px 10px;
+  border: 1px solid var(--c-border);
+
+  /* Unread articles have a coloured left edge */
+  border-left: 4px solid var(--c-accent);
+
+  /* Smooth transitions for the hide-read animation */
+  transition: opacity var(--t-med), border-left-color var(--t-fast);
+}
+
+/* Read articles: faded out and no accent edge */
+.article-card.is-read {
+  opacity: 0.42;
+  border-left-color: transparent;
+}
+
+/* Slight press effect when tapping */
+.article-card:active {
+  opacity: 0.88;
+}
+
+/* ── Card: top metadata row ─────────────────────────────────────────── */
+.card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+/* Source name, e.g. "BBC News" — shown in accent colour */
+.card-source {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--c-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Category pill, e.g. "Sport" */
+.card-category {
+  font-size: 0.65rem;
+  font-weight: 500;
+  background: var(--c-pill-bg);
+  color: var(--c-text-dim);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+/* Time, e.g. "3h ago" — pushed to the right */
+.card-time {
+  font-size: 0.70rem;
+  color: var(--c-text-faint);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Card: headline ─────────────────────────────────────────────────── */
+.card-title {
+  font-size: 1.00rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 5px;
+}
+
+/* The link wraps the full headline — entire title is tappable */
+.card-link {
+  color: var(--c-text);
+  text-decoration: none;
+}
+.card-link:visited {
+  color: var(--c-text);  /* don't change colour on visited — we handle read state ourselves */
+}
+.card-link:active {
+  opacity: 0.7;
+}
+
+/* ── Card: summary (2–3 lines, then clipped) ────────────────────────── */
+.card-summary {
+  font-size: 0.855rem;
+  color: var(--c-text-dim);
+  line-height: 1.5;
+  margin-bottom: 8px;
+
+  /* Clamp to 3 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Card: bottom action row ────────────────────────────────────────── */
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* The small read/unread toggle button */
+.read-btn {
+  background: none;
+  border: none;
+  color: var(--c-text-faint);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 7px;
+  transition: color var(--t-fast), background var(--t-fast);
+  min-height: 28px;      /* minimum tap target */
+  min-width:  60px;
+  text-align: right;
+}
+.read-btn:active {
+  background: var(--c-pill-bg);
+  color: var(--c-text);
+}
+
+/* ── Utility: screen reader only ────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
