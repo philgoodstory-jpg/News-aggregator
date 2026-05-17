@@ -1,35 +1,22 @@
 name: Fetch News Feeds
 
-# When does this run?
 on:
-  # Automatically, once an hour (at 18 minutes past each hour)
   schedule:
     - cron: '18 * * * *'
-
-  # Also whenever you edit your feeds.json — so new sources appear immediately
   push:
     paths:
       - 'feeds.json'
-
-  # And you can always trigger it by hand:
-  # Go to your repo → Actions tab → "Fetch News Feeds" → "Run workflow"
   workflow_dispatch:
 
 jobs:
   fetch-and-commit:
     runs-on: ubuntu-latest
-
-    # This permission lets the workflow write back to your repository
-    # (needed so it can save articles.json and the icon files)
     permissions:
       contents: write
-
     steps:
-      # 1. Download your repository onto the GitHub server
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # 2. Install Python
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -37,27 +24,18 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'scripts/requirements.txt'
 
-      # 3. Install the two libraries the fetcher needs (feedparser and requests)
       - name: Install Python dependencies
         run: pip install -r scripts/requirements.txt
 
-      # 4. Run the fetcher — this downloads all your feeds and writes articles.json
-      #    It also generates icon-192.png and icon-512.png if they don't exist yet.
       - name: Fetch all feeds
         run: python scripts/fetch_feeds.py
 
-      # 5. Commit the updated articles (and icons, if newly generated) back to the repo.
-      #    GitHub Pages then serves the fresh articles.json to your app automatically.
       - name: Commit updated files
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Stage the files that the fetcher may have changed
           git add data/articles.json
           git add icon-192.png icon-512.png 2>/dev/null || true
-
-          # Only commit if something actually changed (avoids empty commits)
           if git diff --staged --quiet; then
             echo "No changes — nothing to commit."
           else
