@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- Makes the page fill the phone screen correctly, including the notch area -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <title>My News</title>
+
+  <!-- ── iPhone / iOS home-screen app settings ─────────────────────────── -->
+  <!-- These tell Safari "this page can be installed and run like a real app" -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My News">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <!-- Colour for the browser chrome / status bar on Android -->
+  <meta name="theme-color" content="#1B263B">
+
+  <!-- ── PWA manifest (also needed for the home screen install prompt) ─── -->
+  <link rel="manifest" href="./manifest.json">
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!--  HEADER — always visible at the top, sticks when you scroll         -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <header class="app-header" role="banner">
+
+    <!-- App name + refresh button on the same row -->
+    <div class="header-top">
+      <h1 class="app-title">My News</h1>
+      <button id="refresh-btn" class="icon-btn" aria-label="Refresh articles" title="Refresh">
+        ↻
+      </button>
+    </div>
+
+    <!-- Last-updated timestamp and unread count badge -->
+    <div class="header-info">
+      <span id="status-text">Loading…</span>
+      <span id="unread-badge" class="unread-badge" aria-live="polite"></span>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="header-controls">
+      <button id="mark-all-btn"  class="control-btn">Mark all read</button>
+      <button id="hide-read-btn" class="control-btn">Hide read</button>
+    </div>
+
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!--  FILTERS — category pills + source dropdown                         -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <div class="filters-bar" role="navigation" aria-label="Filters">
+
+    <!-- Horizontally scrollable row of category buttons -->
+    <div id="category-filters" class="category-filters" role="group" aria-label="Filter by category"></div>
+
+    <!-- Source picker -->
+    <div class="source-row">
+      <label for="source-select" class="source-label">Source</label>
+      <select id="source-select" class="source-select" aria-label="Filter by source"></select>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!--  ARTICLE LIST — filled in by app.js                                 -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <main>
+    <div id="article-list" class="article-list" role="feed" aria-label="Articles" aria-busy="true"></div>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
